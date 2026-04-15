@@ -6,6 +6,9 @@ import com.example.gobang.logic.Gamelogic;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Stack;
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 public class ChessBoard extends JPanel {
     public static final int CELL_SIZE = 40;
@@ -17,12 +20,89 @@ public class ChessBoard extends JPanel {
     private boolean isAIMode = false;      // 是否人机对战模式
     private Stack<int[]> historyStack = new Stack<>(); // 历史记录 {x, y, color}
 
+    // 背景音乐相关
+    private Clip bgmClip;
+    private boolean bgmEnabled = true;     // 是否开启背景音乐
+
     public ChessBoard() {
         setPreferredSize(new Dimension(CELL_SIZE * BoardModel.BOARD_SIZE,
                 CELL_SIZE * BoardModel.BOARD_SIZE));
         model = new BoardModel();
         aiPlayer = new AIPlayer(model, 2); // 默认AI执白
         initBoard();
+        startBackgroundMusic();             // 启动背景音乐
+    }
+
+    // 根据文件名从指定目录获取音频文件
+    private File getAudioFile(String filename) {
+        // 固定目录：C:\Users\19064\java\Hello\res
+        File dir = new File("C:\\Users\\19064\\java\\Hello\\res");
+        File file = new File(dir, filename);
+        if (file.exists()) {
+            return file;
+        }
+        // 备选：项目根目录
+        file = new File(filename);
+        if (file.exists()) {
+            return file;
+        }
+        System.out.println("未找到音频文件: " + filename);
+        return null;
+    }
+
+    // 播放落子音效
+    private void playMoveSound() {
+        File soundFile = getAudioFile("move.wav");
+        if (soundFile == null) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+        try {
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioIn);
+            clip.start(); // 异步播放
+        } catch (Exception e) {
+            Toolkit.getDefaultToolkit().beep();
+        }
+    }
+
+    // 启动背景音乐（循环播放）
+    public void startBackgroundMusic() {
+        if (!bgmEnabled) return;
+        stopBackgroundMusic();
+        File musicFile = getAudioFile("bgm.wav");
+        if (musicFile == null) return;
+        try {
+            AudioInputStream audioIn = AudioSystem.getAudioInputStream(musicFile);
+            bgmClip = AudioSystem.getClip();
+            bgmClip.open(audioIn);
+            bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
+            bgmClip.start();
+            System.out.println("背景音乐播放成功：" + musicFile.getAbsolutePath());
+        } catch (UnsupportedAudioFileException e) {
+            System.out.println("背景音乐格式不支持，请转换为 PCM WAV");
+        } catch (IOException | LineUnavailableException e) {
+            System.out.println("背景音乐播放失败: " + e.getMessage());
+        }
+    }
+
+    // 停止背景音乐
+    public void stopBackgroundMusic() {
+        if (bgmClip != null && bgmClip.isRunning()) {
+            bgmClip.stop();
+            bgmClip.close();
+        }
+    }
+
+    // 切换背景音乐开关
+    public void toggleBackgroundMusic(boolean enable) {
+        this.bgmEnabled = enable;
+        if (enable) {
+            startBackgroundMusic();
+        } else {
+            stopBackgroundMusic();
+        }
     }
 
     // 重置游戏
@@ -55,21 +135,18 @@ public class ChessBoard extends JPanel {
         int[] lastMove = historyStack.pop();
         int x = lastMove[0], y = lastMove[1];
         model.removePiece(x, y);
-        isBlackTurn = !isBlackTurn;   // 切换回合
+        isBlackTurn = !isBlackTurn;
         repaint();
 
-        // 悔棋后，如果是AI模式且轮到AI，则AI立即落子
         if (isAIMode && !gameOver && !isBlackTurn) {
             aiMove();
         }
     }
 
-    // 绘制棋盘和棋子
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // 背景
-        g.setColor(new Color(245, 222, 179)); // 杏色
+        g.setColor(new Color(245, 222, 179)); // 杏色背景
         g.fillRect(0, 0, getWidth(), getHeight());
         drawBoard(g);
         drawPieces(g);
@@ -99,11 +176,10 @@ public class ChessBoard extends JPanel {
         // 星位
         int starSize = 6;
         g2d.setColor(Color.BLACK);
-        // 天元
         g2d.fillOval(CELL_SIZE / 2 + 7 * CELL_SIZE - starSize / 2,
                 CELL_SIZE / 2 + 7 * CELL_SIZE - starSize / 2,
                 starSize, starSize);
-        int[][] starPositions = {{3,3}, {11,3}, {3,11}, {11,11}};
+        int[][] starPositions = {{3, 3}, {11, 3}, {3, 11}, {11, 11}};
         for (int[] pos : starPositions) {
             g2d.fillOval(CELL_SIZE / 2 + pos[0] * CELL_SIZE - starSize / 2,
                     CELL_SIZE / 2 + pos[1] * CELL_SIZE - starSize / 2,
@@ -122,18 +198,18 @@ public class ChessBoard extends JPanel {
                 int x = i * CELL_SIZE + CELL_SIZE / 2;
                 int y = j * CELL_SIZE + CELL_SIZE / 2;
                 int radius = 14;
-                if (piece == 1) { // 黑子
+                if (piece == 1) { // 黑棋
                     g2d.setColor(Color.BLACK);
                     g2d.fillOval(x - radius, y - radius, radius * 2, radius * 2);
                     g2d.setColor(new Color(80, 80, 80));
-                    g2d.fillOval(x - radius/2, y - radius/2, radius/2, radius/2);
-                } else { // 白子
+                    g2d.fillOval(x - radius / 2, y - radius / 2, radius / 2, radius / 2);
+                } else { // 白棋
                     g2d.setColor(Color.WHITE);
                     g2d.fillOval(x - radius, y - radius, radius * 2, radius * 2);
                     g2d.setColor(Color.LIGHT_GRAY);
                     g2d.drawOval(x - radius, y - radius, radius * 2, radius * 2);
                     g2d.setColor(Color.WHITE);
-                    g2d.fillOval(x - radius/3, y - radius/3, radius/2, radius/2);
+                    g2d.fillOval(x - radius / 3, y - radius / 3, radius / 2, radius / 2);
                 }
             }
         }
@@ -142,7 +218,7 @@ public class ChessBoard extends JPanel {
     // 玩家点击处理
     public void handleMouseClick(int mouseX, int mouseY) {
         if (gameOver) return;
-        if (isAIMode && !isBlackTurn) return; // AI模式且非玩家回合
+        if (isAIMode && !isBlackTurn) return;
 
         int x = (mouseX - CELL_SIZE / 4) / CELL_SIZE;
         int y = (mouseY - CELL_SIZE / 4) / CELL_SIZE;
@@ -152,7 +228,7 @@ public class ChessBoard extends JPanel {
         int playerColor = 1; // 玩家执黑
         model.placePiece(x, y, playerColor);
         historyStack.push(new int[]{x, y, playerColor});
-        Toolkit.getDefaultToolkit().beep();
+        playMoveSound(); // 播放落子音效
 
         if (Gamelogic.checkWin(model.getBoard(), x, y, playerColor)) {
             gameOver = true;
@@ -175,12 +251,9 @@ public class ChessBoard extends JPanel {
     // AI落子
     private void aiMove() {
         if (gameOver) return;
-        // 检查是否轮到AI
-        int aiColor = aiPlayer.getAiColor(); // 需要给AIPlayer添加getter，或者直接访问成员变量，这里假设有getter
-        // 为了简洁，我们直接使用已知逻辑：AI颜色是2（白），当前如果 isBlackTurn==false 则轮到白棋
-        // 但为了通用，最好在AIPlayer中添加getter，下面简单处理：
+        int aiColor = aiPlayer.getAiColor();
         if ((aiColor == 1 && !isBlackTurn) || (aiColor == 2 && isBlackTurn)) {
-            return; // 未轮到AI
+            return;
         }
 
         int[] best = aiPlayer.getBestMove();
@@ -195,7 +268,7 @@ public class ChessBoard extends JPanel {
         int x = best[0], y = best[1];
         model.placePiece(x, y, aiColor);
         historyStack.push(new int[]{x, y, aiColor});
-        Toolkit.getDefaultToolkit().beep();
+        playMoveSound(); // AI落子也播放音效
 
         if (Gamelogic.checkWin(model.getBoard(), x, y, aiColor)) {
             gameOver = true;
