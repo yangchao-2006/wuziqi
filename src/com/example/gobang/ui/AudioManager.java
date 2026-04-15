@@ -18,20 +18,10 @@ public class AudioManager {
         return null;
     }
 
+    // 落子音效已移除，此方法不再播放任何声音
     public void playMoveSound() {
-        File soundFile = getAudioFile("move.wav");
-        if (soundFile == null) {
-            java.awt.Toolkit.getDefaultToolkit().beep();
-            return;
-        }
-        try {
-            AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioIn);
-            clip.start();
-        } catch (Exception e) {
-            java.awt.Toolkit.getDefaultToolkit().beep();
-        }
+        // 如需保留简单蜂鸣，取消下行注释
+        // java.awt.Toolkit.getDefaultToolkit().beep();
     }
 
     public void startBackgroundMusic() {
