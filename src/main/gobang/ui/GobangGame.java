@@ -1,8 +1,6 @@
-package com.example.gobang.ui;
+package main.gobang.ui;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class GobangGame extends JFrame {
     private ChessBoard chessBoard;

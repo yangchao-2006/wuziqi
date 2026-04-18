@@ -1,4 +1,4 @@
-package com.example.gobang.logic;
+package main.gobang.logic;
 
 /**
  * 棋盘数据模型，负责存储棋盘状态并提供基础操作。

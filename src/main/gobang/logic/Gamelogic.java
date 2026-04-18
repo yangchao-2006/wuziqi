@@ -1,4 +1,4 @@
-package com.example.gobang.logic;   // 注意小写
+package main.gobang.logic;   // 注意小写
 
 public class Gamelogic {
     public static boolean checkWin(int[][] board, int x, int y, int player) {

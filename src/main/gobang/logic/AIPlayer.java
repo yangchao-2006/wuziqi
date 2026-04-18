@@ -1,4 +1,4 @@
-package com.example.gobang.logic;
+package main.gobang.logic;
 
 /**
  * AI 决策类，根据棋盘模型计算最佳落子位置。

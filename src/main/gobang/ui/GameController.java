@@ -1,8 +1,8 @@
-package com.example.gobang.ui;
+package main.gobang.ui;
 
-import com.example.gobang.logic.BoardModel;
-import com.example.gobang.logic.AIPlayer;
-import com.example.gobang.logic.Gamelogic;
+import main.gobang.logic.BoardModel;
+import main.gobang.logic.AIPlayer;
+import main.gobang.logic.Gamelogic;
 import javax.swing.*;
 import java.util.Stack;
 

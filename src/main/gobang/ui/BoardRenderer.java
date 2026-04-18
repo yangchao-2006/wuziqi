@@ -1,6 +1,6 @@
-package com.example.gobang.ui;
+package main.gobang.ui;
 
-import com.example.gobang.logic.BoardModel;
+import main.gobang.logic.BoardModel;
 import java.awt.*;
 
 public class BoardRenderer {

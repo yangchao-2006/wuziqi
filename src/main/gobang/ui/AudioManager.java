@@ -1,4 +1,4 @@
-package com.example.gobang.ui;
+package main.gobang.ui;
 
 import javax.sound.sampled.*;
 import java.io.File;
